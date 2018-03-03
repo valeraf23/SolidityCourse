@@ -20,13 +20,13 @@ contract OffChain is Ownable{
     mapping (address => uint) userIdByAddr; 
     mapping (address => string) userNameByAddr;
     
-    function lendMoney(uint _amount) public onlyKnownUser() {
+    function lendMoney(uint _amount) public onlyKnownUser() moreThanZero(_amount) {
         uint id = orders.push(Order(userNameByAddr[msg.sender], _amount, uint32(now),"lend")) - 1;
         balanceByAddr[msg.sender] = balanceByAddr[msg.sender] + _amount;
         NewOrder(id, _amount);
     }
     
-    function repayMoney(uint _amount, address _debtorAddress) public onlyOwner() {
+    function repayMoney(uint _amount, address _debtorAddress) public onlyOwner() moreThanZero(_amount) {
         require(_debtorAddress > 0x0);
         require(balanceByAddr[_debtorAddress] >= _amount);
         uint id = orders.push(Order(userNameByAddr[_debtorAddress],_amount, uint32(now),"repay")) - 1;
@@ -42,7 +42,12 @@ contract OffChain is Ownable{
         require(userIdByAddr[msg.sender] != 0);
         _;
     }
-  
+	
+  modifier moreThanZero(uint _amount) {
+       require(_amount > 0);
+        _;
+    }
+	
     function register(string _name) public {
         require(msg.sender != owner);
         require(userIdByAddr[msg.sender] == 0);
