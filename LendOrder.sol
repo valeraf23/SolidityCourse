@@ -21,16 +21,16 @@ contract OffChain is Ownable{
     mapping (address => string) userNameByAddr;
     
     function lendMoney(uint _amount) public onlyKnownUser() {
-        uint id = orders.push(Order(userNameByAddr[msg.sender], _amount, uint32(now),"lend"))-1;
-        balanceByAddr[msg.sender] = balanceByAddr[msg.sender]+_amount;
+        uint id = orders.push(Order(userNameByAddr[msg.sender], _amount, uint32(now),"lend")) - 1;
+        balanceByAddr[msg.sender] = balanceByAddr[msg.sender] + _amount;
         NewOrder(id, _amount);
     }
     
     function repayMoney(uint _amount, address _debtorAddress) public onlyOwner() {
         require(_debtorAddress > 0x0);
         require(balanceByAddr[_debtorAddress] >= _amount);
-        uint id = orders.push(Order(userNameByAddr[_debtorAddress],_amount, uint32(now),"repay"))-1;
-        balanceByAddr[_debtorAddress] = balanceByAddr[_debtorAddress]-_amount;
+        uint id = orders.push(Order(userNameByAddr[_debtorAddress],_amount, uint32(now),"repay")) - 1;
+        balanceByAddr[_debtorAddress] = balanceByAddr[_debtorAddress] - _amount;
         NewOrder(id, _amount);
     }
 	
