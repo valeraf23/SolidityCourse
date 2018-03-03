@@ -1,8 +1,11 @@
 pragma solidity ^0.4.20;
 
-contract OffChain {
+import "./ownable.sol";
+
+contract OffChain is Ownable{
  
     event NewOrder(uint id, uint _amount);
+    event NewUser(string _userName);
 
     struct Order {
         string owner;
@@ -18,25 +21,20 @@ contract OffChain {
     mapping (address => string) userNameByAddr;
     
     function lendMoney(uint _amount) public onlyKnownUser() {
-        var userName = userNameByAddr[msg.sender];
-        var newOrder = Order(userName, _amount, uint32(now),"lend");
-        uint id = orders.push(newOrder)-1;
+        uint id = orders.push(Order(userNameByAddr[msg.sender], _amount, uint32(now),"lend"))-1;
         balanceByAddr[msg.sender] = balanceByAddr[msg.sender]+_amount;
         NewOrder(id, _amount);
     }
     
-    function repayMoney(uint _amount) public onlyKnownUser() {
-        // require(balanceByAddr[msg.sender] == _amount);
-        require(balanceByAddr[msg.sender] >= _amount);
-        
-        var userName = userNameByAddr[msg.sender];
-        var newOrder = Order(userName,_amount, uint32(now),"repay");
-        uint id = orders.push(newOrder)-1;
-        balanceByAddr[msg.sender] = balanceByAddr[msg.sender]-_amount;
+    function repayMoney(uint _amount, address _debtorAddress) public onlyOwner() {
+        require(_debtorAddress > 0x0);
+        require(balanceByAddr[_debtorAddress] >= _amount);
+        uint id = orders.push(Order(userNameByAddr[_debtorAddress],_amount, uint32(now),"repay"))-1;
+        balanceByAddr[_debtorAddress] = balanceByAddr[_debtorAddress]-_amount;
         NewOrder(id, _amount);
     }
 	
-    function ShowBalance() public onlyKnownUser() view returns (uint) {
+    function showBalance() public onlyKnownUser() view returns (uint) {
         return balanceByAddr[msg.sender];
     }
 	
@@ -46,11 +44,12 @@ contract OffChain {
     }
   
     function register(string _name) public {
+        require(msg.sender != owner);
         require(userIdByAddr[msg.sender] == 0);
-        var nameHash = keccak256(_name);
-        require(nameHash != keccak256("") && nameHash != keccak256(" "));
-        userIdByAddr[msg.sender] = uint(nameHash);
+        require(keccak256(_name) != keccak256("") && keccak256(_name) != keccak256(" "));
+        userIdByAddr[msg.sender] = uint(keccak256(_name));
         userNameByAddr[msg.sender] = _name;
+        NewUser(_name);
     }
 }
    
